@@ -1,0 +1,123 @@
+package com.mycompany.compiladores;
+
+import java_cup.runtime.*;
+
+
+parser code {:
+    public void syntax_error(Symbol s) {
+        System.err.println("Error sintáctico en línea " + (s.left+1) + 
+                         ", columna " + (s.right+1) + ": " + s.value);
+    }
+
+    public void report_error(String message, Object info) {
+        System.err.println("Error sintáctico: " + message);
+    }
+:}
+
+// Terminales (sin cambios)
+terminal DEFINE, PRINT, IF, ELSE, ELSEIF, WHILE, LOOP, FUNCTION, RETURN, END, DO, THEN;
+terminal TRUE, FALSE;
+terminal SUMA, RESTA, MULTIPLICACION, DIVISION;
+terminal MENORIGUAL, MAYORIGUAL, MENOR, MAYOR, IGUAL, DIFERENTE;
+terminal AND, OR, NOT;
+terminal PAREN_IZQUIERDO, PAREN_DERECHO, LLAVE_IZQUIERDO, LLAVE_DERECHO;
+terminal COMA, PUNTOCOMA;
+terminal ID;
+terminal ENTERO;
+terminal DECIMAL;
+terminal CADENA;
+
+// No terminales (ajustados)
+non terminal programa;
+non terminal lista_sentencias, sentencia, bloque, expr;
+non terminal parametros, lista_expr, elseif_list;
+non terminal loop_init, loop_cond, loop_inc;
+non terminal expr_or, expr_and, expr_not, expr_rel, expr_add, expr_mul, expr_unary;
+
+// Precedencias (sin cambios)
+precedence right NOT;
+precedence left OR;
+precedence left AND;
+precedence left IGUAL, DIFERENTE;
+precedence left MENOR, MENORIGUAL, MAYOR, MAYORIGUAL;
+precedence left SUMA, RESTA;
+precedence left MULTIPLICACION, DIVISION;
+
+start with programa;
+
+// Producciones corregidas
+programa ::= lista_sentencias;
+
+lista_sentencias ::= sentencia
+                   | lista_sentencias sentencia;
+
+sentencia ::= DEFINE ID PUNTOCOMA
+            | DEFINE ID IGUAL expr PUNTOCOMA
+            | PRINT lista_expr PUNTOCOMA
+            | WHILE expr DO bloque END
+            | FUNCTION ID PAREN_IZQUIERDO parametros PAREN_DERECHO bloque
+            | RETURN expr PUNTOCOMA
+            | IF expr THEN bloque elseif_list END
+            | LOOP PAREN_IZQUIERDO loop_init PUNTOCOMA loop_cond PUNTOCOMA loop_inc PAREN_DERECHO DO bloque END
+            ;
+
+parametros ::= 
+             | ID
+             | parametros COMA ID
+             ;
+
+lista_expr ::= expr
+             | lista_expr COMA expr
+             ;
+
+bloque ::= LLAVE_IZQUIERDO lista_sentencias LLAVE_DERECHO
+         | LLAVE_IZQUIERDO LLAVE_DERECHO;
+
+elseif_list ::= 
+              | ELSEIF expr THEN bloque elseif_list
+              | ELSE bloque
+              ;
+
+loop_init ::= DEFINE ID IGUAL expr
+            | ID IGUAL expr
+            ;
+
+loop_cond ::= expr;
+
+loop_inc ::= ID IGUAL expr;
+
+// Expresiones (sin cambios, pero bien estructuradas)
+expr ::= expr_or;
+
+expr_or ::= expr_or OR expr_and
+          | expr_and;
+
+expr_and ::= expr_and AND expr_not
+           | expr_not;
+
+expr_not ::= NOT expr_not
+           | expr_rel;
+
+expr_rel ::= expr_rel MENOR expr_add
+           | expr_rel MAYOR expr_add
+           | expr_rel MENORIGUAL expr_add
+           | expr_rel MAYORIGUAL expr_add
+           | expr_rel IGUAL expr_add
+           | expr_rel DIFERENTE expr_add
+           | expr_add;
+
+expr_add ::= expr_add SUMA expr_mul
+           | expr_add RESTA expr_mul
+           | expr_mul;
+
+expr_mul ::= expr_mul MULTIPLICACION expr_unary
+           | expr_mul DIVISION expr_unary
+           | expr_unary;
+
+expr_unary ::= PAREN_IZQUIERDO expr PAREN_DERECHO
+             | ID
+             | ENTERO
+             | DECIMAL
+             | CADENA
+             | TRUE
+             | FALSE;
