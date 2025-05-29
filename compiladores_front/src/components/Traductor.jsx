@@ -6,9 +6,20 @@ const Traductor = () => {
   const [outputText, setOutputText] = useState("");
   const fileInputRef = useRef(null);
 
-  const handleTranslate = () => {
-    setOutputText(inputText.toUpperCase());
-  };
+  const handleTranslate = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/analizador/analizar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: inputText,
+    });
+
+    const result = await response.text();
+    setOutputText(result);
+  } catch (error) {
+    setOutputText('Error al conectar con el backend: ' + error.message);
+  }
+};
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];

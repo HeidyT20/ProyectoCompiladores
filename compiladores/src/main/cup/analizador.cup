@@ -30,7 +30,7 @@ terminal CADENA;
 // No terminales (ajustados)
 non terminal programa;
 non terminal lista_sentencias, sentencia, bloque, expr;
-non terminal parametros, lista_expr, elseif_list;
+non terminal parametros, lista_parametros, lista_expr, elseif_list, elseif_items;
 non terminal loop_init, loop_cond, loop_inc;
 non terminal expr_or, expr_and, expr_not, expr_rel, expr_add, expr_mul, expr_unary;
 
@@ -55,16 +55,17 @@ sentencia ::= DEFINE ID PUNTOCOMA
             | DEFINE ID IGUAL expr PUNTOCOMA
             | PRINT lista_expr PUNTOCOMA
             | WHILE expr DO bloque END
-            | FUNCTION ID PAREN_IZQUIERDO parametros PAREN_DERECHO bloque
+            | FUNCTION ID PAREN_IZQUIERDO parametros PAREN_DERECHO bloque END
             | RETURN expr PUNTOCOMA
             | IF expr THEN bloque elseif_list END
             | LOOP PAREN_IZQUIERDO loop_init PUNTOCOMA loop_cond PUNTOCOMA loop_inc PAREN_DERECHO DO bloque END
             ;
 
-parametros ::= 
-             | ID
-             | parametros COMA ID
-             ;
+parametros ::= lista_parametros
+             | /* vacío */;
+
+lista_parametros ::= ID
+                   | lista_parametros COMA ID;
 
 lista_expr ::= expr
              | lista_expr COMA expr
@@ -73,10 +74,12 @@ lista_expr ::= expr
 bloque ::= LLAVE_IZQUIERDO lista_sentencias LLAVE_DERECHO
          | LLAVE_IZQUIERDO LLAVE_DERECHO;
 
-elseif_list ::= 
-              | ELSEIF expr THEN bloque elseif_list
+elseif_list ::= elseif_items
               | ELSE bloque
-              ;
+              | /* vacío */;
+
+elseif_items ::= ELSEIF expr THEN bloque
+               | elseif_items ELSEIF expr THEN bloque;
 
 loop_init ::= DEFINE ID IGUAL expr
             | ID IGUAL expr
